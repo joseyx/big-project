@@ -4,6 +4,7 @@ import pkgutil
 from typing import List, Tuple
 import logging
 
+import bcrypt
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
@@ -51,3 +52,15 @@ async def custom_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content={"detail": "Internal Server Error", "request_id": request_id},
     )
+
+# Hash a password using bcrypt
+def hash_password(password: str) -> str:
+    pwd_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password=pwd_bytes, salt=salt)
+    return hashed_password.decode('utf-8') 
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    password_bytes = plain_password.encode('utf-8')
+    hashed_password_bytes = hashed_password.encode('utf-8')  # Convertir str a bytes
+    return bcrypt.checkpw(password_bytes, hashed_password_bytes)

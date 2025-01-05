@@ -13,19 +13,19 @@ from app.config.utils import custom_exception_handler
 logger = logging.getLogger(__name__)
 
 # Custom Logging Middleware
-# class LogMiddleware(BaseHTTPMiddleware):
-#     async def dispatch(self, request: Request, call_next):
-#         # Obtener el Request ID de los encabezados o generar uno nuevo
-#         request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
-#         # Obtener los últimos 6 caracteres del Request ID
-#         short_request_id = request_id[-6:]
-#         # Registrar información de la solicitud con el Request ID acortado
-#         logger.info(f"Request ID: {short_request_id} - {request.method} {request.url}")
-#         # Procesar la solicitud
-#         response = await call_next(request)
-#         # Registrar información de la respuesta con el Request ID acortado
-#         logger.info(f"Request ID: {short_request_id} - Response status: {response.status_code}")
-#         return response
+class LogMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Obtener el Request ID de los encabezados o generar uno nuevo
+        request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+        # Obtener los últimos 6 caracteres del Request ID
+        short_request_id = request_id[-6:]
+        # Registrar información de la solicitud con el Request ID acortado
+        logger.info(f"Request ID: {short_request_id} - {request.method} {request.url}")
+        # Procesar la solicitud
+        response = await call_next(request)
+        # Registrar información de la respuesta con el Request ID acortado
+        logger.info(f"Request ID: {short_request_id} - Response status: {response.status_code}")
+        return response
     
 # Custom Request ID Middleware
 class CustomRequestIDMiddleware(BaseHTTPMiddleware):
@@ -54,6 +54,10 @@ class CustomPerformanceMiddleware(BaseHTTPMiddleware):
         return response
 
 def add_middlewares(app):
+
+    # Request ID Middleware
+    app.add_middleware(CustomRequestIDMiddleware)
+
     # CORS Middleware
     app.add_middleware(
         CORSMiddleware,
@@ -69,9 +73,6 @@ def add_middlewares(app):
     # Session Middleware
     secret_key = os.getenv("SECRET_KEY", "default-secret-key")  # Ensure to set a strong secret key in production
     app.add_middleware(SessionMiddleware, secret_key=secret_key)
-
-    # Request ID Middleware
-    app.add_middleware(CustomRequestIDMiddleware)
     
     # Exception Handling Middleware
     app.add_middleware(CustomExceptionMiddleware)
