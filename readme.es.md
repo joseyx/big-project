@@ -2,6 +2,10 @@
 
 Este proyecto está construido usando FastAPI y se puede ejecutar usando Docker.
 
+## Mejores practicas
+
+Para las mejores practicas de FastAPI, revisa el repositorio [FastAPI Best Practices](https://github.com/zhanymkanov/fastapi-best-practices).
+
 ## Requisitos Previos
 
 - Docker
@@ -41,3 +45,13 @@ docker-compose down
 - La aplicación expone el puerto `8000` por defecto.
 
 Para más detalles, consulta la documentación de [FastAPI](https://fastapi.tiangolo.com/) y [Docker](https://docs.docker.com/).
+
+## Migraciones de la Base de Datos
+
+Usa estos comandos para administrar el esquema de tu base de datos:
+
+```sh
+alembic revision --autogenerate -m "[Nombre de la migración]"
+alembic upgrade head
+alembic downgrade -1
+```

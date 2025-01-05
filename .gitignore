@@ -169,3 +169,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Alembic
+# Ignore all files in migrations/versions
+/migrations/versions/*
+
+# Except the .gitkeep file to keep the versions directory
+!/migrations/versions/.gitkeep
