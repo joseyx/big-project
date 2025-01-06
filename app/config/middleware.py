@@ -81,4 +81,4 @@ def add_middlewares(app):
     app.add_middleware(CustomPerformanceMiddleware)
     
     # Logging Middleware
-    # app.add_middleware(LogMiddleware)
+    app.add_middleware(LogMiddleware)

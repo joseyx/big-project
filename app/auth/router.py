@@ -1,12 +1,14 @@
 from typing import Annotated
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_200_OK
 
 # local imports
-from app.auth.schemas import User, UserLogin
+from app.auth.schemas import Token, User
+from app.auth.utils import authenticate_user, get_user
 from app.database import SessionDep
-from app.config.utils import hash_password, verify_password
+from app.config.oauth import create_access_token, hash_password
 
 
 router = APIRouter()
@@ -28,7 +30,7 @@ async def register(
 ):
     
     # Verify if the email already exists
-    user = session.exec(select(User).where(User.email == user_in.email))
+    user = get_user(session, user_in.email)
 
     if user:
         raise HTTPException(
@@ -38,6 +40,10 @@ async def register(
     
     # Cipher the password
     hashed_password = hash_password(user_in.password)
+
+    # Handle optinal username
+    if not user_in.username:
+        user_in.username = user_in.email
 
     # Create the user
     user = User(**user_in.model_dump(exclude={'password'}), password=hashed_password)
@@ -57,24 +63,24 @@ async def register(
 @router.post("/login", tags=["Auth"], status_code=HTTP_200_OK)
 async def login(
     session: SessionDep,
-    user_login: UserLogin,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     request: Request,
 ):
     
     # Construir la consulta para seleccionar el usuario por email
-    user = session.exec(select(User).where(User.email == user_login.email)).scalar_one_or_none()
-    print(f"User: {user}")
+    user = authenticate_user(session, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail="Invalid credentials"
         )
     
-    if not verify_password(user_login.password, user.password):
-        raise HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail="Invalid credentials"
-        )
+    access_token = create_access_token(
+        data={
+            "id": user.id,
+            "username": user.username
+        }
+    )
     
     request.session['user'] = {
         'id': user.id,
@@ -83,9 +89,4 @@ async def login(
     }
     request.session['is_logged'] = True
 
-    return {
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "message": "User logged in successfully"
-    }
+    return Token(access_token=access_token, message="Logged successfully")

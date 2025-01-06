@@ -1,8 +1,6 @@
-from typing import Annotated, Optional
-
-from fastapi import Depends, FastAPI, HTTPException, Query
+from typing import Optional
 from pydantic import EmailStr
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlmodel import Field, SQLModel
 
 
 class User(SQLModel, table=True):
@@ -10,9 +8,19 @@ class User(SQLModel, table=True):
     name: str = Field(max_length=100)
     age: Optional[int] = Field(default=None, index=True)
     email: EmailStr = Field(default=None, unique=True, index=True)
+    username: Optional[str] = Field(default=None, unique=True, index=True)
     password: Optional[str] = Field(default=None)
-    test_field: Optional[str] = Field(default=None)
 
-class UserLogin(SQLModel):
+class PublicUser(SQLModel):
+    id: Optional[int]
+    name: str
+    age: Optional[int]
     email: EmailStr
-    password: str
+    username: Optional[str]
+
+class Token(SQLModel):
+    access_token: str
+    message: str
+
+class TokenData(SQLModel):
+    username: str | None = None
