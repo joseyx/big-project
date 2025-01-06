@@ -1,15 +1,18 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
+from typing import Annotated
 
-router = APIRouter()
+from app.auth.dependencies import is_logged
 
-@router.get("/test_session", tags=["users"])
-async def test_session(request: Request):
+router = APIRouter(tags=["testing"])
+
+@router.get("/test_session")
+async def test_session(request: Request, is_logged: Annotated[bool, Depends(is_logged)]):
     request.session['test'] = {
         'test': 'test',
         'name': 'Jose',
     }
     return {"message": "Session set"}
 
-@router.get("/test_session_get", tags=["users"])
+@router.get("/test_session_get")
 async def test_session_get(request: Request):
     return request.session.get('test')

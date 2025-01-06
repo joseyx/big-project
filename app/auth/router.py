@@ -81,6 +81,7 @@ async def login(
         'name': user.name,
         'email': user.email,
     }
+    request.session['is_logged'] = True
 
     return {
         "id": user.id,
